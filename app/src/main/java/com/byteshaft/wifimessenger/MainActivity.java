@@ -1,6 +1,8 @@
 package com.byteshaft.wifimessenger;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -94,25 +96,46 @@ public class MainActivity extends AppCompatActivity implements
                     layoutMainTwo.setVisibility(View.VISIBLE);
                     AppGlobals.setService(true);
                     showUsername.setTextColor(Color.parseColor("#4CAF50"));
-                    invalidateOptionsMenu();
                 } else {
                     stopService(new Intent(getApplicationContext(), LongRunningService.class));
                     layoutMainTwo.setVisibility(View.GONE);
                     AppGlobals.setService(false);
                     showUsername.setTextColor(Color.parseColor("#F44336"));
-                    invalidateOptionsMenu();
                 }
+                invalidateOptionsMenu();
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        final String name = parent.getItemAtPosition(position).toString();
+
         if (!ServiceHelpers.isPeerListEmpty()) {
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
-            String name = parent.getItemAtPosition(position).toString();
             String ipAddress = peers.get(name).getHostAddress();
             MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
         }
+
+        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
+        actionDialog.setTitle("Choose Action")
+                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                        intent.putExtra("CONTACT_NAME", name);
+                        startActivity(intent);
+                    }
+                })
+
+                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .create().show();
     }
 
     private void notVirgin() {
@@ -132,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void hideKeyboard(View view) {
-        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
@@ -157,5 +180,4 @@ public class MainActivity extends AppCompatActivity implements
         }
         return super.onOptionsItemSelected(item);
     }
-
 }
