@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
-
     <TextView
         android:id="@+id/tv_peer_list"
         android:layout_width="fill_parent"
@@ -9,6 +8,7 @@
         android:textColor="@android:color/black"
         android:textSize="26dp"
         android:textStyle="bold"
-        android:layout_margin="15dp"
-        android:layout_marginLeft="10dp"/>
+        android:typeface="serif"
+        android:layout_margin="10dp"
+        android:layout_marginLeft="20dp"/>
 </LinearLayout>
