@@ -128,7 +128,6 @@ public class ServiceHelpers {
                         mSocket = new DatagramSocket(BROADCAST_PORT);
                         mSocket.setReuseAddress(true);
                     }
-                    mSocket.setReuseAddress(true);
                     byte[] buffer = new byte[BROADCAST_BUF_SIZE];
                     while (DISCOVERY && System.currentTimeMillis() < end) {
                         DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
@@ -153,21 +152,21 @@ public class ServiceHelpers {
                                 peersMap.put(name, ip);
                             }
                         }
-                    }
 
-                    for (String key : peersMap.keySet()) {
-                        peers.add(key);
-                        final ArrayAdapter adapter = new ArrayAdapter(
-                                AppGlobals.getContext(), R.layout.list_layout, R.id.tv_peer_list, peers);
-                        activty.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                peersList.setAdapter(null);
-                                peersList.setAdapter(adapter);
-                                peersMap.clear();
-                                stopDiscovery(5000, activty, peersList);
-                            }
-                        });
+                        for (String key : peersMap.keySet()) {
+                            peers.add(key);
+                            final ArrayAdapter adapter = new ArrayAdapter(
+                                    AppGlobals.getContext(), R.layout.list_layout, R.id.tv_peer_list, peers);
+                            activty.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    peersList.setAdapter(null);
+                                    peersList.setAdapter(adapter);
+                                    peersMap.clear();
+                                    stopDiscovery(5000, activty, peersList);
+                                }
+                            });
+                        }
                     }
                 } catch (SocketException e) {
                     e.printStackTrace();
@@ -183,7 +182,6 @@ public class ServiceHelpers {
                 }
             }
         });
-        discoveryThread.start();
     }
 
     public static void stopDiscovery() {
