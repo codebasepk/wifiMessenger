@@ -128,7 +128,7 @@ public class ServiceHelpers {
                                 activty.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        peersList.removeAllViews();
+//                                        peersList.removeAllViews();
                                         peersList.setAdapter(adapter);
                                     }
                                 });
