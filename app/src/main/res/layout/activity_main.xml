@@ -46,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12dp"
-            android:typeface="monospace"/>
+            android:typeface="sans"/>
         <Switch
             android:id="@+id/switch_service"
             android:layout_width="match_parent"
@@ -61,12 +61,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_margin="10dp"
+            android:gravity="center_horizontal"
             android:layout_below="@+id/switch_service">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SELECT A CONTACT"
+                android:textColor="#3F51B5"
+                android:textSize="20dp"
+                android:layout_marginTop="30dp"
+                android:textStyle="bold"
+                android:typeface="serif"/>
             <ListView
                 android:id="@+id/lv_peer_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp">
+                android:layout_height="wrap_content">
             </ListView>
         </LinearLayout>
     </RelativeLayout>

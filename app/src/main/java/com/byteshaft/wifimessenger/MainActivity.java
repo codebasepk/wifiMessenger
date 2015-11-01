@@ -94,11 +94,13 @@ public class MainActivity extends AppCompatActivity implements
                     layoutMainTwo.setVisibility(View.VISIBLE);
                     AppGlobals.setService(true);
                     showUsername.setTextColor(Color.parseColor("#4CAF50"));
+                    invalidateOptionsMenu();
                 } else {
                     stopService(new Intent(getApplicationContext(), LongRunningService.class));
                     layoutMainTwo.setVisibility(View.GONE);
                     AppGlobals.setService(false);
                     showUsername.setTextColor(Color.parseColor("#F44336"));
+                    invalidateOptionsMenu();
                 }
         }
     }
@@ -118,8 +120,8 @@ public class MainActivity extends AppCompatActivity implements
         layoutUsername.setVisibility(View.GONE);
         AppGlobals.setVirgin(false);
         showUsername.setText("Username: " + AppGlobals.getName());
+        serviceSwitch.setChecked(AppGlobals.isServiceOn());
         if (AppGlobals.isServiceOn()) {
-            serviceSwitch.setChecked(true);
             layoutMainTwo.setVisibility(View.VISIBLE);
             ServiceHelpers.startPeerDiscovery(MainActivity.this, peerList);
             showUsername.setTextColor(Color.parseColor("#4CAF50"));
@@ -137,6 +139,11 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        if (AppGlobals.isServiceOn()) {
+            menu.findItem(R.id.action_refresh).setVisible(true);
+        } else {
+            menu.findItem(R.id.action_refresh).setVisible(false);
+        }
         return true;
     }
 
@@ -145,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
 
-            Log.i("refresh", "refresh");
+
             return true;
         }
         return super.onOptionsItemSelected(item);
