@@ -23,7 +23,11 @@ import android.widget.Toast;
 
 import com.byteshaft.wifimessenger.services.LongRunningService;
 import com.byteshaft.wifimessenger.utils.AppGlobals;
+import com.byteshaft.wifimessenger.utils.MessagingHelpers;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
+
+import java.net.InetAddress;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements
         Switch.OnCheckedChangeListener, ListView.OnItemClickListener {
@@ -47,7 +51,9 @@ public class MainActivity extends AppCompatActivity implements
         serviceSwitch = (Switch) findViewById(R.id.switch_service);
         serviceSwitch.setOnCheckedChangeListener(this);
         peerList = (ListView) findViewById(R.id.lv_peer_list);
+
         if (AppGlobals.isVirgin()) {
+            System.out.println("First time");
             layoutMain.setVisibility(View.GONE);
             layoutUsername.setVisibility(View.VISIBLE);
             editTextUsername = (EditText) findViewById(R.id.editTextDisplayName);
@@ -99,7 +105,12 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+        if (!ServiceHelpers.isPeerListEmpty()) {
+            HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
+            String name = parent.getItemAtPosition(position).toString();
+            String ipAddress = peers.get(name).getHostAddress();
+            MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
+        }
     }
 
     private void notVirgin() {

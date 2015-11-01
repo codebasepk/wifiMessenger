@@ -14,26 +14,20 @@ public class LongRunningService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         InetAddress ip = ServiceHelpers.getBroadcastIp();
-        ServiceHelpers.broadcastName("Mohsin", ip);
+        ServiceHelpers.broadcastName("ADD:", "Baandri", ip);
         return super.onStartCommand(intent, flags, startId);
     }
-
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         ServiceHelpers.stopNameBroadcast();
-
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-
     }
-
-
 }
