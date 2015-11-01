@@ -12,6 +12,7 @@ public class AppGlobals extends Application {
     private static SharedPreferences sPreferences;
     private static final String VIRGIN_KEY = "virgin";
     private static final String USER_NAME = "user_name";
+    private static final String SERVICE_KEY = "service_switch";
 
     @Override
     public void onCreate() {
@@ -28,11 +29,23 @@ public class AppGlobals extends Application {
         return sPreferences.getBoolean(VIRGIN_KEY, true);
     }
 
-    public static void setVrigin(boolean virgin) {
+    public static void setVirgin(boolean virgin) {
         sPreferences.edit().putBoolean(VIRGIN_KEY, virgin).apply();
     }
 
     public static String getName() {
         return sPreferences.getString(USER_NAME, null);
+    }
+
+    public static void putName(String username) {
+        sPreferences.edit().putString(USER_NAME, username).apply();
+    }
+
+    public static boolean isServiceOn() {
+        return sPreferences.getBoolean(SERVICE_KEY, false);
+    }
+
+    public static void setService(boolean service) {
+        sPreferences.edit().putBoolean(SERVICE_KEY, service).apply();
     }
 }
