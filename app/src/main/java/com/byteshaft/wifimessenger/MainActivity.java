@@ -11,7 +11,11 @@ import android.widget.Switch;
 
 import com.byteshaft.wifimessenger.services.LongRunningService;
 import com.byteshaft.wifimessenger.utils.AppGlobals;
+import com.byteshaft.wifimessenger.utils.MessagingHelpers;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
+
+import java.net.InetAddress;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements
         Switch.OnCheckedChangeListener, ListView.OnItemClickListener {
@@ -25,16 +29,12 @@ public class MainActivity extends AppCompatActivity implements
 
         } else {
             ListView peerList = (ListView) findViewById(R.id.lv_peer_list);
+            peerList.setOnItemClickListener(this);
             ServiceHelpers.startPeerDiscovery(this, peerList);
         }
 
         Switch serviceSwitch = (Switch) findViewById(R.id.switch_service);
         serviceSwitch.setOnCheckedChangeListener(this);
-//        String[] anArray = new String[] {"omer", "falak", "mullanh"};
-//
-//        ArrayAdapter arrayAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, anArray);
-//
-//        peerList.setAdapter(arrayAdapter);
     }
 
     @Override
@@ -51,6 +51,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+        if (!ServiceHelpers.isPeerListEmpty()) {
+            HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
+            String name = parent.getItemAtPosition(position).toString();
+            String ipAddress = peers.get(name).getHostAddress();
+            MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
+        }
     }
 }
