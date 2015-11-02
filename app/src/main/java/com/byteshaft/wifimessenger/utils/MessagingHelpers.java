@@ -22,7 +22,6 @@ public class MessagingHelpers {
     private static boolean MIC;
 
     public static void sendMessage(final String msg, final String ip, final int port) {
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -37,8 +36,6 @@ public class MessagingHelpers {
             @Override
             public void run() {
                 sendMsg(content, ip, port);
-//                AudioCall call = new AudioCall(address);
-//                call.startCall();
             }
         }).start();
     }

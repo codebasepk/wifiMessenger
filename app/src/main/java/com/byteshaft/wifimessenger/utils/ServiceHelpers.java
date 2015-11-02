@@ -135,6 +135,7 @@ public class ServiceHelpers {
                         DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
                         mSocket.setSoTimeout(5000);
                         mSocket.receive(packet);
+                        InetAddress ip = packet.getAddress();
                         final String data = new String(buffer, 0, packet.getLength());
                         String action = data.substring(0, 4);
                         switch (action) {
@@ -150,25 +151,22 @@ public class ServiceHelpers {
                                 });
                                 break;
                             case "ADD:":
-                                InetAddress ip = packet.getAddress();
                                 String name = data.substring(4, data.length());
                                 if (peersMap.get(name) == null && !isSelf(ip)) {
                                     peersMap.put(name, ip);
                                 }
                                 break;
                             case "CAL:":
-                                InetAddress address = packet.getAddress();
                                 String nameCAL = data.substring(4, data.length());
                                 Intent intent = new Intent(AppGlobals.getContext(), CallActivity.class);
                                 intent.putExtra("CONTACT_NAME", nameCAL);
                                 intent.putExtra("CALL_STATE", "INCOMING");
-                                intent.putExtra("IP_ADDRESS", address.getHostAddress());
+                                intent.putExtra("IP_ADDRESS", ip.getHostAddress());
                                 activty.startActivity(intent);
                                 Log.i("CAL", "Incoming Call");
                                 break;
                             case "ACC:":
-                                InetAddress addressACC = packet.getAddress();
-                                AudioCall callACC = new AudioCall(addressACC);
+                                AudioCall callACC = AudioCall.getInstance(ip);
                                 callACC.startCall();
                                 CallActivity.IN_CALL = true;
                                 Log.i("ACC", "started calling");
@@ -180,8 +178,7 @@ public class ServiceHelpers {
                                 Log.i("REJ", "Call Rejected");
                                 return;
                             case "END:":
-                                InetAddress addressEND = packet.getAddress();
-                                AudioCall callEND = new AudioCall(addressEND);
+                                AudioCall callEND = AudioCall.getInstance(ip);
                                 callEND.endCall();
                                 if (CallActivity.isRunning()) {
                                     CallActivity.getInstance().finish();

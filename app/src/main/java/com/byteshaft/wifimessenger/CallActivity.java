@@ -50,7 +50,7 @@ public class CallActivity extends Activity {
         final String ipAddress = intent.getStringExtra("IP_ADDRESS");
         try {
             InetAddress address = InetAddress.getByName(ipAddress);
-            audioCall = new AudioCall(address);
+            audioCall = AudioCall.getInstance(address);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }

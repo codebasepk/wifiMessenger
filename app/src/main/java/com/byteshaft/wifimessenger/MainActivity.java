@@ -110,13 +110,11 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-
         if (!ServiceHelpers.isPeerListEmpty()) {
             System.out.println(String.format("Item: %d clicked", position));
-            String name = parent.getItemAtPosition(position).toString();
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
+            String name = parent.getItemAtPosition(position).toString();
             String ipAddress = peers.get(name).getHostAddress();
-
             showActionsDialog(name, ipAddress, peers);
         }
     }
