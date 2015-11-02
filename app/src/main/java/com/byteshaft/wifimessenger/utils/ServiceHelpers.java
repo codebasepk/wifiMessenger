@@ -135,39 +135,48 @@ public class ServiceHelpers {
                         mSocket.receive(packet);
                         final String data = new String(buffer, 0, packet.getLength());
                         String action = data.substring(0, 4);
-                        if (action.equals("MSG:")) {
-                            activty.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String message = data.substring(4, data.length());
-                                    Toast.makeText(
-                                            activty.getApplicationContext(),
-                                            message, Toast.LENGTH_LONG).show();
+                        System.out.println(data);
+                        switch (action) {
+                            case "MSG:":
+                                activty.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        String message = data.substring(4, data.length());
+                                        Toast.makeText(
+                                                activty.getApplicationContext(),
+                                                message, Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                                break;
+                            case "ADD:":
+                                InetAddress ip = packet.getAddress();
+                                String name = data.substring(4, data.length());
+                                if (peersMap.get(name) == null && !isSelf(ip)) {
+                                    peersMap.put(name, ip);
                                 }
-                            });
-                        } else if (action.equals("ADD:")) {
-                            InetAddress ip = packet.getAddress();
-                            String name = data.substring(4, data.length());
-                            if (peersMap.get(name) == null && !isSelf(ip)) {
-                                peersMap.put(name, ip);
-                            }
-                        }
-
-                        for (String key : peersMap.keySet()) {
-                            peers.add(key);
-                            final ArrayAdapter adapter = new ArrayAdapter(
-                                    AppGlobals.getContext(), R.layout.list_layout, R.id.tv_peer_list, peers);
-                            activty.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    peersList.setAdapter(null);
-                                    peersList.setAdapter(adapter);
-                                    peersMap.clear();
-                                    stopDiscovery(5000, activty, peersList);
-                                }
-                            });
+                                break;
+                            case "CAL:":
+                                InetAddress address = packet.getAddress();
+                                AudioCall call = new AudioCall(address);
+                                call.startCall();
+                                break;
                         }
                     }
+                    for (String key : peersMap.keySet()) {
+                        peers.add(key);
+                    }
+
+                    final ArrayAdapter adapter = new ArrayAdapter(
+                            AppGlobals.getContext(), R.layout.list_layout, R.id.tv_peer_list, peers);
+                    activty.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            peersList.setAdapter(null);
+                            peersList.setAdapter(adapter);
+                            stopDiscovery(5000, activty, peersList);
+                        }
+                    });
+
                 } catch (SocketException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -175,13 +184,13 @@ public class ServiceHelpers {
                         @Override
                         public void run() {
                             peersList.setAdapter(null);
-                            peersMap.clear();
                             stopDiscovery(5000, activty, peersList);
                         }
                     });
                 }
             }
         });
+        discoveryThread.start();
     }
 
     public static void stopDiscovery() {

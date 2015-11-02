@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements
         serviceSwitch = (Switch) findViewById(R.id.switch_service);
         serviceSwitch.setOnCheckedChangeListener(this);
         peerList = (ListView) findViewById(R.id.lv_peer_list);
+        peerList.setOnItemClickListener(this);
 
         if (AppGlobals.isVirgin()) {
             System.out.println("First time");
@@ -112,9 +113,11 @@ public class MainActivity extends AppCompatActivity implements
         final String name = parent.getItemAtPosition(position).toString();
 
         if (!ServiceHelpers.isPeerListEmpty()) {
+            System.out.println(String.format("Item: %d clicked", position));
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
             String ipAddress = peers.get(name).getHostAddress();
             MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
+            MessagingHelpers.sendCallRequest(peers.get(name), ipAddress, ServiceHelpers.BROADCAST_PORT);
         }
 
         AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
