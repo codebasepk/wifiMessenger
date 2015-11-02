@@ -1,14 +1,15 @@
 package com.byteshaft.wifimessenger.utils;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.byteshaft.wifimessenger.CallActivity;
 import com.byteshaft.wifimessenger.R;
@@ -25,11 +26,18 @@ import java.util.HashMap;
 
 public class ServiceHelpers {
 
+    private static final int DISCOVER_PORT = 50003;
+    private static boolean DISCOVER;
+    private static Thread discoverThread;
+    private static DatagramSocket sDataSocket;
+    private static boolean cleanLoopStart;
+
     private final static int BROADCAST_INTERVAL = 1000;
     public final static int BROADCAST_PORT = 50001;
     private static final int BROADCAST_BUF_SIZE = 1024;
     private static boolean BROADCAST;
     private static boolean DISCOVERY;
+
     private static Thread broadcastThread;
     private static Thread discoveryThread;
 
@@ -60,7 +68,7 @@ public class ServiceHelpers {
                     byte[] message = request.getBytes();
                     DatagramSocket socket = new DatagramSocket();
                     socket.setBroadcast(true);
-                    DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, BROADCAST_PORT);
+                    DatagramPacket packet = new DatagramPacket(message, message.length, broadcastIP, DISCOVER_PORT);
                     while(BROADCAST) {
                         socket.send(packet);
                         Log.i(LOG_TAG, "Broadcast packet sent: " + packet.getAddress().toString());
@@ -117,10 +125,79 @@ public class ServiceHelpers {
                 "255";
     }
 
-    public static void startPeerDiscovery(final Activity activty, final ListView peersList) {
+    public static void discover(final Activity activity, final ListView peersList) {
+        DISCOVER = true;
         final ArrayList<String> peers = new ArrayList<>();
         long start = System.currentTimeMillis();
-        final long end = start + 5*1000; // 10 seconds * 1000 ms/sec
+        final long end = start + 10*1000; // 10 seconds * 1000 ms/sec
+        discoverThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (sDataSocket == null) {
+                        sDataSocket = new DatagramSocket(DISCOVER_PORT);
+                        sDataSocket.setReuseAddress(true);
+                    }
+                    byte[] buffer = new byte[BROADCAST_BUF_SIZE];
+                    while (DISCOVER && System.currentTimeMillis() < end) {
+                        DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
+                        sDataSocket.setSoTimeout(15000);
+                        sDataSocket.receive(packet);
+                        InetAddress ip = packet.getAddress();
+                        String data = new String(buffer, 0, packet.getLength());
+                        String action = data.substring(0, 4);
+                        if (action.equals("ADD:")) {
+                            String name = data.substring(4, data.length());
+                            if (peersMap.get(name) == null && !isSelf(ip)) {
+                                peersMap.put(name, ip);
+                            }
+                        }
+                    }
+
+                    for (String key: peersMap.keySet()) {
+                        peers.add(key);
+                    }
+
+                    final ArrayAdapter adapter = new ArrayAdapter(
+                            AppGlobals.getContext(),
+                            R.layout.list_layout,
+                            R.id.tv_peer_list,
+                            peers
+                    );
+
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            peersList.setAdapter(null);
+                            peersList.setAdapter(adapter);
+                            stopDiscovery(5000, activity, peersList);
+                        }
+                    });
+
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+
+                    System.out.println("Faced IOException");
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            peersList.setAdapter(null);
+                            stopDiscovery(5000, activity, peersList);
+                        }
+                    });
+                    e.printStackTrace();
+                }
+            }
+        });
+        discoverThread.start();
+    }
+
+    public static void stopDiscover() {
+        DISCOVER = false;
+    }
+
+    public static void startPeerDiscovery() {
         DISCOVERY = true;
         discoveryThread = new Thread(new Runnable() {
             @Override
@@ -131,24 +208,17 @@ public class ServiceHelpers {
                         mSocket.setReuseAddress(true);
                     }
                     byte[] buffer = new byte[BROADCAST_BUF_SIZE];
-                    while (DISCOVERY && System.currentTimeMillis() < end) {
+                    while (DISCOVERY) {
                         DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
-                        mSocket.setSoTimeout(5000);
+                        mSocket.setSoTimeout(15000);
                         mSocket.receive(packet);
                         InetAddress ip = packet.getAddress();
                         final String data = new String(buffer, 0, packet.getLength());
                         String action = data.substring(0, 4);
                         switch (action) {
                             case "MSG:":
-                                activty.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String message = data.substring(4, data.length());
-                                        Toast.makeText(
-                                                activty.getApplicationContext(),
-                                                message, Toast.LENGTH_LONG).show();
-                                    }
-                                });
+                                String message = data.substring(4, data.length());
+                                System.out.println(message);
                                 break;
                             case "ADD:":
                                 String name = data.substring(4, data.length());
@@ -158,11 +228,17 @@ public class ServiceHelpers {
                                 break;
                             case "CAL:":
                                 String nameCAL = data.substring(4, data.length());
-                                Intent intent = new Intent(AppGlobals.getContext(), CallActivity.class);
+//                                Intent intent = new Intent(AppGlobals.getContext(), CallActivity.class);
+//                                intent.putExtra("CONTACT_NAME", nameCAL);
+//                                intent.putExtra("CALL_STATE", "INCOMING");
+//                                intent.putExtra("IP_ADDRESS", ip.getHostAddress());
+                                IntentFilter filter = new IntentFilter("com.call");
+                                AppGlobals.getContext().registerReceiver(receiver, filter);
+                                Intent intent = new Intent("com.call");
                                 intent.putExtra("CONTACT_NAME", nameCAL);
                                 intent.putExtra("CALL_STATE", "INCOMING");
                                 intent.putExtra("IP_ADDRESS", ip.getHostAddress());
-                                activty.startActivity(intent);
+                                AppGlobals.getContext().sendBroadcast(intent);
                                 Log.i("CAL", "Incoming Call");
                                 break;
                             case "ACC:":
@@ -176,7 +252,7 @@ public class ServiceHelpers {
                                     CallActivity.getInstance().finish();
                                 }
                                 Log.i("REJ", "Call Rejected");
-                                return;
+                                break;
                             case "END:":
                                 AudioCall callEND = AudioCall.getInstance(ip);
                                 callEND.endCall();
@@ -185,34 +261,14 @@ public class ServiceHelpers {
                                 }
                                 CallActivity.IN_CALL = false;
                                 Log.i("END", "Call Ended");
-                                return;
+                                break;
                         }
                     }
-                    for (String key : peersMap.keySet()) {
-                        peers.add(key);
-                    }
-
-                    final ArrayAdapter adapter = new ArrayAdapter(
-                            AppGlobals.getContext(), R.layout.list_layout, R.id.tv_peer_list, peers);
-                    activty.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            peersList.setAdapter(null);
-                            peersList.setAdapter(adapter);
-                            stopDiscovery(5000, activty, peersList);
-                        }
-                    });
-
                 } catch (SocketException e) {
+                    startPeerDiscovery();
                     e.printStackTrace();
                 } catch (IOException e) {
-                    activty.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            peersList.setAdapter(null);
-                            stopDiscovery(5000, activty, peersList);
-                        }
-                    });
+                    e.printStackTrace();
                 }
             }
         });
@@ -229,12 +285,12 @@ public class ServiceHelpers {
 
     public static void stopDiscovery(int restartTime, final Activity activty,
                                      final ListView peersList) {
-        stopDiscovery();
+//        stopDiscovery();
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 System.out.println("Restarting discovery");
-                startPeerDiscovery(activty, peersList);
+                discover(activty, peersList);
             }
         }, restartTime);
     }
@@ -255,4 +311,16 @@ public class ServiceHelpers {
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         return wifiInfo.getIpAddress();
     }
+
+    private static BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Intent callIntent = new Intent(AppGlobals.getContext(), CallActivity.class);
+            callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            callIntent.putExtra("CONTACT_NAME", intent.getExtras().getString("CONTACT_NAME"));
+            callIntent.putExtra("CALL_STATE", intent.getExtras().getString("CALL_STATE"));
+            callIntent.putExtra("IP_ADDRESS", intent.getExtras().getString("IP_ADDRESS"));
+            AppGlobals.getContext().startActivity(callIntent);
+        }
+    };
 }

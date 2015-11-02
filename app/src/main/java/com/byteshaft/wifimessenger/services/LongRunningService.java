@@ -18,6 +18,7 @@ public class LongRunningService extends Service {
         InetAddress ip = ServiceHelpers.getBroadcastIp();
         String username = AppGlobals.getName();
         ServiceHelpers.broadcastName("ADD:", username, ip);
+        ServiceHelpers.startPeerDiscovery();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -25,6 +26,7 @@ public class LongRunningService extends Service {
     public void onDestroy() {
         super.onDestroy();
         ServiceHelpers.stopNameBroadcast();
+        ServiceHelpers.stopDiscover();
     }
 
     @Nullable

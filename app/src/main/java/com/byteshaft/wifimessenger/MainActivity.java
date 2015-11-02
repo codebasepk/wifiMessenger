@@ -89,6 +89,20 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        ServiceHelpers.stopDiscover();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!AppGlobals.isVirgin()) {
+            ServiceHelpers.discover(MainActivity.this, peerList);
+        }
+    }
+
+    @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         switch (buttonView.getId()) {
             case R.id.switch_service:
@@ -127,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements
         serviceSwitch.setChecked(AppGlobals.isServiceOn());
         if (AppGlobals.isServiceOn()) {
             layoutMainTwo.setVisibility(View.VISIBLE);
-            ServiceHelpers.startPeerDiscovery(MainActivity.this, peerList);
             showUsername.setTextColor(Color.parseColor("#4CAF50"));
         } else {
             layoutMainTwo.setVisibility(View.GONE);
