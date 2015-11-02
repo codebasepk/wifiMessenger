@@ -183,13 +183,10 @@ public class MainActivity extends AppCompatActivity implements
                 .setPositiveButton("Text", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                         intent.putExtra("CONTACT_NAME", username);
+                        intent.putExtra("IP_ADDRESS", ipAddress);
                         startActivity(intent);
-
-                        MessagingHelpers.sendMessage("MSG:Hello", ipAddress,
-                                ServiceHelpers.BROADCAST_PORT);
                     }
                 })
 

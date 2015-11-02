@@ -11,7 +11,7 @@
         android:layout_marginTop="30dp"
         android:layout_gravity="center_horizontal"
         android:typeface="serif"
-        android:textSize="24dp"
+        android:textSize="26dp"
         android:textStyle="bold"
         android:textColor="#3F51B5"/>
 
