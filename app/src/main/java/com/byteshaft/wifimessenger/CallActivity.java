@@ -45,7 +45,6 @@ public class CallActivity extends Activity {
         buttonCallAccept = (ImageButton) findViewById(R.id.button_call_accept);
         buttonCallReject = (ImageButton) findViewById(R.id.button_call_reject);
         Intent intent = getIntent();
-        String contact = intent.getStringExtra("CONTACT_NAME");
         String callSate = intent.getStringExtra("CALL_STATE");
         final String ipAddress = intent.getStringExtra("IP_ADDRESS");
         try {
@@ -60,9 +59,11 @@ public class CallActivity extends Activity {
         ringtone = RingtoneManager.getRingtone(getApplicationContext(), notification);
 
         if (callSate.equals("OUTGOING")) {
+            String contact = intent.getStringExtra("CONTACT_NAME");
             textViewContactName.setText("Calling: " + contact);
             buttonCallAccept.setVisibility(View.GONE);
         } else if (callSate.equals("INCOMING")) {
+            String contact = intent.getStringExtra("CONTACT_NAME");
             textViewContactName.setText("Incoming: " + contact);
             buttonCallAccept.setVisibility(View.VISIBLE);
             ringtone.play();
