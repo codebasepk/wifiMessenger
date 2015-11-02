@@ -22,25 +22,20 @@ public class MessagingHelpers {
     private static boolean MIC;
 
     public static void sendMessage(final String msg, final String ip, final int port) {
-        final String header = "MSG:";
-        final String content = header + msg;
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                sendMsg(content, ip, port);
+                sendMsg(msg, ip, port);
             }
         }).start();
     }
 
-    public static void sendCallRequest(final InetAddress address, final String ip, final int port) {
+    public static void sendCallRequest(final String name, final String ip, final int port) {
         final String content = "CAL:";
         new Thread(new Runnable() {
             @Override
             public void run() {
                 sendMsg(content, ip, port);
-                AudioCall call = new AudioCall(address);
-                call.startCall();
             }
         }).start();
     }

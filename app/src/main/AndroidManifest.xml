@@ -24,6 +24,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ChatActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".CallActivity"
+            android:screenOrientation="portrait"/>
         <service android:name=".services.LongRunningService"/>
     </application>
 

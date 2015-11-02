@@ -26,13 +26,20 @@ public class AudioCall {
     private boolean mic = false; // Enable mic?
     private boolean speakers = false; // Enable speakers?
 
-    public AudioCall(InetAddress address) {
+    private static AudioCall sInstance;
 
+    private AudioCall(InetAddress address) {
         this.address = address;
     }
 
-    public void startCall() {
+    public static AudioCall getInstance(InetAddress address) {
+        if (sInstance == null) {
+            sInstance = new AudioCall(address);
+        }
+        return sInstance;
+    }
 
+    public void startCall() {
         startMic();
         startSpeakers();
     }

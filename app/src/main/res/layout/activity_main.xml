@@ -15,10 +15,10 @@
             android:id="@+id/textViewEnterName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="User Name"
+            android:text="USERNAME"
             android:textStyle="bold"
             android:typeface="monospace"
-            android:textSize="16dp"/>
+            android:textSize="18dp"/>
         <EditText
             android:id="@+id/editTextDisplayName"
             android:layout_width="wrap_content"
@@ -58,7 +58,7 @@
         <LinearLayout
             android:id="@+id/layout_main_two"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
             android:layout_margin="10dp"
             android:gravity="center_horizontal"

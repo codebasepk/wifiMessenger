@@ -1,15 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="5dp">
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tv_contact_name_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:typeface="serif"
+            android:textSize="24dp"
+            android:textStyle="bold"
+            android:textColor="#3F51B5"/>
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+        </ScrollView>
+    </LinearLayout>
 
-    <EditText
-        android:id="@+id/et_chat"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="bottom"/>
-
-</LinearLayout>
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:weightSum="10"
+        android:padding="1dp"
+        android:background="#803F51B5">
+        <EditText
+            style="@style/Widget.AppCompat.EditText"
+            android:id="@+id/et_chat"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="20dp"
+            android:inputType="textShortMessage"
+            android:layout_weight="8"
+            android:background="@android:drawable/editbox_background_normal"/>
+        <ImageButton
+            style="@style/Widget.AppCompat.ImageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@mipmap/ic_button_send"
+            android:src="@drawable/button_feedback"
+            android:text="SEND"
+            android:textSize="18dp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="3dp"
+            android:textStyle="bold"
+            android:typeface="sans"
+            android:layout_weight="2"/>
+    </LinearLayout>
+</RelativeLayout>

@@ -1,6 +1,8 @@
 package com.byteshaft.wifimessenger;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -95,26 +97,25 @@ public class MainActivity extends AppCompatActivity implements
                     layoutMainTwo.setVisibility(View.VISIBLE);
                     AppGlobals.setService(true);
                     showUsername.setTextColor(Color.parseColor("#4CAF50"));
-                    invalidateOptionsMenu();
                 } else {
                     stopService(new Intent(getApplicationContext(), LongRunningService.class));
                     layoutMainTwo.setVisibility(View.GONE);
                     AppGlobals.setService(false);
                     showUsername.setTextColor(Color.parseColor("#F44336"));
-                    invalidateOptionsMenu();
                 }
+                invalidateOptionsMenu();
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
         if (!ServiceHelpers.isPeerListEmpty()) {
             System.out.println(String.format("Item: %d clicked", position));
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
             String name = parent.getItemAtPosition(position).toString();
             String ipAddress = peers.get(name).getHostAddress();
-            MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
-            MessagingHelpers.sendCallRequest(peers.get(name), ipAddress, ServiceHelpers.BROADCAST_PORT);
+            showActionsDialog(name, ipAddress, peers);
         }
     }
 
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public void hideKeyboard(View view) {
-        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
@@ -161,4 +162,37 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    public void showActionsDialog(final String username, final String ipAddress,  final HashMap<String, InetAddress> peers) {
+
+        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
+        actionDialog.setTitle("Choose Action")
+                .setMessage("Selected User: " + username)
+                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                        intent.putExtra("CONTACT_NAME", username);
+                        startActivity(intent);
+
+                        MessagingHelpers.sendMessage("MSG:Hello", ipAddress,
+                                ServiceHelpers.BROADCAST_PORT);
+                    }
+                })
+
+                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(MainActivity.this, CallActivity.class);
+                        intent.putExtra("CONTACT_NAME", username);
+                        intent.putExtra("CALL_STATE", "OUTGOING");
+                        intent.putExtra("IP_ADDRESS", ipAddress);
+                        startActivity(intent);
+
+                        MessagingHelpers.sendCallRequest(username, ipAddress, ServiceHelpers.BROADCAST_PORT);
+                    }
+                })
+                .create().show();
+    }
 }
