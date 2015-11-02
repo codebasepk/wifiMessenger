@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import com.byteshaft.wifimessenger.utils.AppGlobals;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 
 import java.net.InetAddress;
@@ -15,7 +16,8 @@ public class LongRunningService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         InetAddress ip = ServiceHelpers.getBroadcastIp();
-        ServiceHelpers.broadcastName("ADD:", "Baandri", ip);
+        String username = AppGlobals.getName();
+        ServiceHelpers.broadcastName("ADD:", username, ip);
         return super.onStartCommand(intent, flags, startId);
     }
 

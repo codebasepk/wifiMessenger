@@ -32,7 +32,6 @@ public class AudioCall {
     }
 
     public void startCall() {
-
         startMic();
         startSpeakers();
     }

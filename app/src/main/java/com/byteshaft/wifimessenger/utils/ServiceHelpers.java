@@ -2,6 +2,7 @@ package com.byteshaft.wifimessenger.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.byteshaft.wifimessenger.CallActivity;
 import com.byteshaft.wifimessenger.R;
 
 import java.io.IOException;
@@ -135,7 +137,6 @@ public class ServiceHelpers {
                         mSocket.receive(packet);
                         final String data = new String(buffer, 0, packet.getLength());
                         String action = data.substring(0, 4);
-                        System.out.println(data);
                         switch (action) {
                             case "MSG:":
                                 activty.runOnUiThread(new Runnable() {
@@ -157,9 +158,37 @@ public class ServiceHelpers {
                                 break;
                             case "CAL:":
                                 InetAddress address = packet.getAddress();
-                                AudioCall call = new AudioCall(address);
-                                call.startCall();
+                                String nameCAL = data.substring(4, data.length());
+                                Intent intent = new Intent(AppGlobals.getContext(), CallActivity.class);
+                                intent.putExtra("CONTACT_NAME", nameCAL);
+                                intent.putExtra("CALL_STATE", "INCOMING");
+                                intent.putExtra("IP_ADDRESS", address.getHostAddress());
+                                activty.startActivity(intent);
+                                Log.i("CAL", "Incoming Call");
                                 break;
+                            case "ACC:":
+                                InetAddress addressACC = packet.getAddress();
+                                AudioCall callACC = new AudioCall(addressACC);
+                                callACC.startCall();
+                                CallActivity.IN_CALL = true;
+                                Log.i("ACC", "started calling");
+                                break;
+                            case "REJ:":
+                                if (CallActivity.isRunning()) {
+                                    CallActivity.getInstance().finish();
+                                }
+                                Log.i("REJ", "Call Rejected");
+                                return;
+                            case "END:":
+                                InetAddress addressEND = packet.getAddress();
+                                AudioCall callEND = new AudioCall(addressEND);
+                                callEND.endCall();
+                                if (CallActivity.isRunning()) {
+                                    CallActivity.getInstance().finish();
+                                }
+                                CallActivity.IN_CALL = false;
+                                Log.i("END", "Call Ended");
+                                return;
                         }
                     }
                     for (String key : peersMap.keySet()) {

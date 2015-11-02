@@ -110,35 +110,15 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        final String name = parent.getItemAtPosition(position).toString();
 
         if (!ServiceHelpers.isPeerListEmpty()) {
             System.out.println(String.format("Item: %d clicked", position));
+            String name = parent.getItemAtPosition(position).toString();
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
             String ipAddress = peers.get(name).getHostAddress();
-            MessagingHelpers.sendMessage("Hello", ipAddress, ServiceHelpers.BROADCAST_PORT);
-            MessagingHelpers.sendCallRequest(peers.get(name), ipAddress, ServiceHelpers.BROADCAST_PORT);
+
+            showActionsDialog(name, ipAddress, peers);
         }
-
-        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
-        actionDialog.setTitle("Choose Action")
-                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                        intent.putExtra("CONTACT_NAME", name);
-                        startActivity(intent);
-                    }
-                })
-
-                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                })
-                .create().show();
     }
 
     private void notVirgin() {
@@ -182,5 +162,39 @@ public class MainActivity extends AppCompatActivity implements
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void showActionsDialog(final String username, final String ipAddress,  final HashMap<String, InetAddress> peers) {
+
+        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
+        actionDialog.setTitle("Choose Action")
+                .setMessage("Selected User: " + username)
+                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                        intent.putExtra("CONTACT_NAME", username);
+                        startActivity(intent);
+
+                        MessagingHelpers.sendMessage("MSG:Hello", ipAddress,
+                                ServiceHelpers.BROADCAST_PORT);
+                    }
+                })
+
+                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        Intent intent = new Intent(MainActivity.this, CallActivity.class);
+                        intent.putExtra("CONTACT_NAME", username);
+                        intent.putExtra("CALL_STATE", "OUTGOING");
+                        intent.putExtra("IP_ADDRESS", ipAddress);
+                        startActivity(intent);
+
+                        MessagingHelpers.sendCallRequest(username, ipAddress, ServiceHelpers.BROADCAST_PORT);
+                    }
+                })
+                .create().show();
     }
 }
