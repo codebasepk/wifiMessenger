@@ -17,11 +17,15 @@
             android:textSize="26dp"
             android:textStyle="bold"
             android:textColor="#3F51B5"/>
-        <ScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="10dp">
-        </ScrollView>
+        <ListView
+            android:id="@+id/lv_chat"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:divider="@null"
+            android:stackFromBottom="true"
+            android:transcriptMode="alwaysScroll"/>
     </LinearLayout>
 
     <LinearLayout
@@ -43,16 +47,13 @@
             android:background="@android:drawable/editbox_background_normal"/>
         <ImageButton
             style="@style/Widget.AppCompat.ImageButton"
+            android:id="@+id/button_chat_send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@mipmap/ic_button_send"
             android:src="@drawable/button_feedback"
-            android:text="SEND"
-            android:textSize="18dp"
             android:layout_gravity="center_vertical"
             android:layout_margin="3dp"
-            android:textStyle="bold"
-            android:typeface="sans"
             android:layout_weight="2"/>
     </LinearLayout>
 </RelativeLayout>
