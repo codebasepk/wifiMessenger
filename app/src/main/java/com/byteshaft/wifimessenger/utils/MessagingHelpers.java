@@ -1,10 +1,5 @@
 package com.byteshaft.wifimessenger.utils;
 
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
-import android.util.Log;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -56,72 +51,6 @@ public class MessagingHelpers {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void startCall(final String ip, final int port) {
-        int SAMPLE_RATE = 8000; // Hertz
-        final String header = "PICK";
-        final AudioRecord audioRecorder = new AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                AudioRecord.getMinBufferSize(SAMPLE_RATE,
-                        AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 10);
-
-        callThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int bytes_read;
-                byte[] buf = new byte[BUF_SIZE];
-                try {
-                    // Create a socket and start recording
-                    Log.i(LOG_TAG, "Packet destination: " + ip);
-                    DatagramSocket socket = new DatagramSocket();
-                    InetAddress local = InetAddress.getByName(ip);
-                    audioRecorder.startRecording();
-                    while(MIC) {
-                        // Capture audio from the MIC and transmit it
-                        bytes_read = audioRecorder.read(buf, 0, BUF_SIZE);
-                        DatagramPacket packet = new DatagramPacket(buf, bytes_read, local, port);
-                        socket.send(packet);
-                        Thread.sleep(SAMPLE_INTERVAL, 0);
-                    }
-                    // Stop recording and release resources
-                    audioRecorder.stop();
-                    audioRecorder.release();
-                }
-                catch(InterruptedException e) {
-
-                    Log.e(LOG_TAG, "InterruptedException: " + e.toString());
-                    MIC = false;
-                }
-                catch(SocketException e) {
-
-                    Log.e(LOG_TAG, "SocketException: " + e.toString());
-                    MIC = false;
-                }
-                catch(UnknownHostException e) {
-
-                    Log.e(LOG_TAG, "UnknownHostException: " + e.toString());
-                    MIC = false;
-                }
-                catch(IOException e) {
-
-                    Log.e(LOG_TAG, "IOException: " + e.toString());
-                    MIC = false;
-                }
-            }
-        });
-        callThread.start();
-    }
-    
-    public static void endCall() {
-        MIC = false;
-        if (callThread != null) {
-            callThread.interrupt();
-            callThread = null;
         }
     }
 }

@@ -18,7 +18,7 @@ public class LongRunningService extends Service {
         InetAddress ip = ServiceHelpers.getBroadcastIp();
         String username = AppGlobals.getName();
         ServiceHelpers.broadcastName("ADD:", username, ip);
-        ServiceHelpers.startPeerDiscovery();
+        ServiceHelpers.startListeningForCommands();
         return super.onStartCommand(intent, flags, startId);
     }
 
