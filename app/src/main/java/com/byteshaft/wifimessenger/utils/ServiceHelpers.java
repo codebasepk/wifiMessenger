@@ -1,6 +1,7 @@
 package com.byteshaft.wifimessenger.utils;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,12 +9,14 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.byteshaft.wifimessenger.CallActivity;
+import com.byteshaft.wifimessenger.activities.CallActivity;
 import com.byteshaft.wifimessenger.R;
+import com.byteshaft.wifimessenger.database.MessagesDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -226,9 +229,21 @@ public class ServiceHelpers {
                                 String message = data.substring(4, data.length());
                                 try {
                                     JSONObject object = new JSONObject(message);
-                                    System.out.println(object.get("sender"));
-                                    System.out.println(object.get("text"));
-                                    System.out.println(object.get("time"));
+                                    String deviceId = (String) object.get("device_id");
+                                    String sender = (String) object.get("sender");
+                                    String messageText = (String) object.get("text");
+                                    String messageTime = (String) object.get("time");
+                                    MessagesDatabase database = new MessagesDatabase(AppGlobals.getContext());
+                                    database.addNewMessageToThread(
+                                            sender+"_"+deviceId, messageText, "1", messageTime);
+
+                                    IntentFilter filter = new IntentFilter("sms_notification");
+                                    AppGlobals.getContext().registerReceiver(notificationReceiver, filter);
+                                    Intent intent = new Intent("sms_notification");
+                                    intent.putExtra("sender", sender);
+                                    intent.putExtra("message", messageText);
+                                    intent.putExtra("time", messageTime);
+                                    AppGlobals.getContext().sendBroadcast(intent);
                                 } catch (JSONException e) {
                                     startListeningForCommands();
                                     e.printStackTrace();
@@ -329,4 +344,22 @@ public class ServiceHelpers {
             AppGlobals.getContext().startActivity(callIntent);
         }
     };
+
+    private static BroadcastReceiver notificationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String sender = intent.getExtras().getString("sender");
+            String message = intent.getExtras().getString("message");
+            showNotification(sender, message);
+        }
+    };
+
+    private static void showNotification(String title, String content) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(AppGlobals.getContext());
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setContentTitle("Message from " + title);
+        builder.setContentText(content);
+        NotificationManager manager = (NotificationManager) AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(998, builder.build());
+    }
 }

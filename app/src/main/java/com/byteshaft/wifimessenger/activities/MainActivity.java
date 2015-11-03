@@ -1,4 +1,4 @@
-package com.byteshaft.wifimessenger;
+package com.byteshaft.wifimessenger.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,6 +23,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.byteshaft.wifimessenger.R;
 import com.byteshaft.wifimessenger.services.LongRunningService;
 import com.byteshaft.wifimessenger.utils.AppGlobals;
 import com.byteshaft.wifimessenger.utils.MessagingHelpers;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        startActivity(new Intent(this, MessagesListActivity.class));
         layoutUsername = (LinearLayout) findViewById(R.id.layout_username);
         layoutMain = (RelativeLayout) findViewById(R.id.layout_main);
         layoutMainTwo = (LinearLayout) findViewById(R.id.layout_main_two);
