@@ -14,10 +14,11 @@ import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 
 public class ChatActivity extends Activity implements View.OnClickListener {
 
-    TextView textViewContactName;
-    ImageButton buttonSend;
-    String ipAddress;
-    EditText editTextMessage;
+    private TextView textViewContactName;
+    private ImageButton buttonSend;
+    private String ipAddress;
+    private EditText editTextMessage;
+    private String contactName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,10 +31,10 @@ public class ChatActivity extends Activity implements View.OnClickListener {
         buttonSend.setOnClickListener(this);
 
         Intent intent = getIntent();
-        String contact = intent.getStringExtra("CONTACT_NAME");
+        contactName = intent.getStringExtra("CONTACT_NAME");
         ipAddress = intent.getStringExtra("IP_ADDRESS");
 
-        textViewContactName.setText(contact);
+        textViewContactName.setText(contactName);
     }
 
     @Override
@@ -44,7 +45,10 @@ public class ChatActivity extends Activity implements View.OnClickListener {
                 if (message.trim().length() < 1) {
                     Toast.makeText(this, "Message field is empty", Toast.LENGTH_SHORT).show();
                 } else {
-                    MessagingHelpers.sendMessage("MSG:" + message, ipAddress,
+                    String realMessage = String.format(
+                            "{\"sender\": \"%s\", \"text\": \"%s\", \"time\": \"%s\"}",
+                            contactName, message, String.valueOf(System.currentTimeMillis()));
+                    MessagingHelpers.sendMessage("MSG:" + realMessage, ipAddress,
                             ServiceHelpers.BROADCAST_PORT);
                     editTextMessage.getText().clear();
                 }

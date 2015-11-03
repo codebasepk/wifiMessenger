@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
@@ -13,6 +14,9 @@ import android.widget.ListView;
 
 import com.byteshaft.wifimessenger.CallActivity;
 import com.byteshaft.wifimessenger.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -27,7 +31,7 @@ import java.util.HashMap;
 public class ServiceHelpers {
 
     private static final int DISCOVER_PORT = 50003;
-    private static boolean DISCOVER;
+    public static boolean DISCOVER;
     private static Thread discoverThread;
     private static DatagramSocket sDataSocket;
     private static boolean cleanLoopStart;
@@ -170,20 +174,21 @@ public class ServiceHelpers {
                         public void run() {
                             peersList.setAdapter(null);
                             peersList.setAdapter(adapter);
-                            stopDiscovery(5000, activity, peersList);
+                            restartDiscovery(5000, activity, peersList);
                         }
                     });
 
                 } catch (SocketException e) {
+                    DISCOVER = false;
                     e.printStackTrace();
                 } catch (IOException e) {
-
+                    DISCOVER = false;
                     System.out.println("Faced IOException");
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             peersList.setAdapter(null);
-                            stopDiscovery(5000, activity, peersList);
+                            restartDiscovery(5000, activity, peersList);
                         }
                     });
                     e.printStackTrace();
@@ -197,7 +202,8 @@ public class ServiceHelpers {
         DISCOVER = false;
     }
 
-    public static void startPeerDiscovery() {
+    public static void startListeningForCommands() {
+        System.out.println("Listening");
         DISCOVERY = true;
         discoveryThread = new Thread(new Runnable() {
             @Override
@@ -210,7 +216,7 @@ public class ServiceHelpers {
                     byte[] buffer = new byte[BROADCAST_BUF_SIZE];
                     while (DISCOVERY) {
                         DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
-                        mSocket.setSoTimeout(15000);
+//                        mSocket.setSoTimeout(15000);
                         mSocket.receive(packet);
                         InetAddress ip = packet.getAddress();
                         final String data = new String(buffer, 0, packet.getLength());
@@ -218,7 +224,15 @@ public class ServiceHelpers {
                         switch (action) {
                             case "MSG:":
                                 String message = data.substring(4, data.length());
-                                System.out.println(message);
+                                try {
+                                    JSONObject object = new JSONObject(message);
+                                    System.out.println(object.get("sender"));
+                                    System.out.println(object.get("text"));
+                                    System.out.println(object.get("time"));
+                                } catch (JSONException e) {
+                                    startListeningForCommands();
+                                    e.printStackTrace();
+                                }
                                 break;
                             case "ADD:":
                                 String name = data.substring(4, data.length());
@@ -228,10 +242,6 @@ public class ServiceHelpers {
                                 break;
                             case "CAL:":
                                 String nameCAL = data.substring(4, data.length());
-//                                Intent intent = new Intent(AppGlobals.getContext(), CallActivity.class);
-//                                intent.putExtra("CONTACT_NAME", nameCAL);
-//                                intent.putExtra("CALL_STATE", "INCOMING");
-//                                intent.putExtra("IP_ADDRESS", ip.getHostAddress());
                                 IntentFilter filter = new IntentFilter("com.call");
                                 AppGlobals.getContext().registerReceiver(receiver, filter);
                                 Intent intent = new Intent("com.call");
@@ -242,6 +252,9 @@ public class ServiceHelpers {
                                 Log.i("CAL", "Incoming Call");
                                 break;
                             case "ACC:":
+                                if (CallActivity.isVisible() && CallActivity.isRunning()) {
+                                    CallActivity.getInstance().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+                                }
                                 AudioCall callACC = AudioCall.getInstance(ip);
                                 callACC.startCall();
                                 CallActivity.IN_CALL = true;
@@ -265,9 +278,10 @@ public class ServiceHelpers {
                         }
                     }
                 } catch (SocketException e) {
-                    startPeerDiscovery();
+                    startListeningForCommands();
                     e.printStackTrace();
                 } catch (IOException e) {
+                    startListeningForCommands();
                     e.printStackTrace();
                 }
             }
@@ -275,17 +289,9 @@ public class ServiceHelpers {
         discoveryThread.start();
     }
 
-    public static void stopDiscovery() {
-        DISCOVERY = false;
-        if (discoveryThread != null) {
-            discoveryThread.interrupt();
-            discoveryThread = null;
-        }
-    }
-
-    public static void stopDiscovery(int restartTime, final Activity activty,
-                                     final ListView peersList) {
-//        stopDiscovery();
+    public static void restartDiscovery(int restartTime, final Activity activty,
+                                        final ListView peersList) {
+//        restartDiscovery();
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

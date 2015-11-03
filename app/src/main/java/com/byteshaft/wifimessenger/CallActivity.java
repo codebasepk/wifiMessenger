@@ -28,7 +28,7 @@ import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class CallActivity extends Activity implements SensorEventListener {
+public class CallActivity extends Activity implements SensorEventListener, View.OnClickListener {
 
     TextView textViewContactName;
     ImageButton buttonCallAccept;
@@ -39,6 +39,7 @@ public class CallActivity extends Activity implements SensorEventListener {
     public static boolean IN_CALL;
     private static CallActivity sInstance;
     private static boolean callActivityVisible;
+    private String ipAddress;
 
     AudioManager mAudioManager;
 
@@ -48,6 +49,10 @@ public class CallActivity extends Activity implements SensorEventListener {
 
     public static boolean isRunning() {
         return sInstance != null;
+    }
+
+    public static boolean isVisible() {
+        return callActivityVisible;
     }
 
     @Override
@@ -68,7 +73,7 @@ public class CallActivity extends Activity implements SensorEventListener {
         buttonCallReject = (ImageButton) findViewById(R.id.button_call_reject);
         Intent intent = getIntent();
         String callSate = intent.getStringExtra("CALL_STATE");
-        final String ipAddress = intent.getStringExtra("IP_ADDRESS");
+        ipAddress = intent.getStringExtra("IP_ADDRESS");
         try {
             InetAddress address = InetAddress.getByName(ipAddress);
             audioCall = AudioCall.getInstance(address);
@@ -88,40 +93,8 @@ public class CallActivity extends Activity implements SensorEventListener {
             ringtone.play();
         }
 
-        buttonCallAccept.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ringtone.isPlaying()) {
-                    ringtone.stop();
-                }
-                setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-                mAudioManager.setMode(AudioManager.MODE_IN_CALL);
-                mAudioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_RAISE, 14);
-                vibrator.cancel();
-                audioCall.startCall();
-                IN_CALL = true;
-                MessagingHelpers.sendMessage("ACC:", ipAddress, ServiceHelpers.BROADCAST_PORT);
-                buttonCallAccept.setVisibility(View.GONE);
-            }
-        });
-
-        buttonCallReject.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ringtone.isPlaying()) {
-                    ringtone.stop();
-                }
-                if (IN_CALL) {
-                    audioCall.endCall();
-                    MessagingHelpers.sendMessage("END:", ipAddress, ServiceHelpers.BROADCAST_PORT);
-                    IN_CALL = false;
-                    mAudioManager.setMode(AudioManager.MODE_NORMAL);
-                } else {
-                    MessagingHelpers.sendMessage("REJ:", ipAddress, ServiceHelpers.BROADCAST_PORT);
-                }
-                finish();
-            }
-        });
+        buttonCallAccept.setOnClickListener(this);
+        buttonCallReject.setOnClickListener(this);
     }
 
     @Override
@@ -168,6 +141,9 @@ public class CallActivity extends Activity implements SensorEventListener {
     @Override
     protected void onStop() {
         super.onStop();
+        if (ringtone.isPlaying()) {
+            ringtone.stop();
+        }
         callActivityVisible = false;
     }
 
@@ -175,5 +151,38 @@ public class CallActivity extends Activity implements SensorEventListener {
     protected void onDestroy() {
         super.onDestroy();
         callActivityVisible = false;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.button_call_accept:
+                if (ringtone.isPlaying()) {
+                    ringtone.stop();
+                }
+                setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+//                mAudioManager.setMode(AudioManager.MODE_IN_CALL);
+//                mAudioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_RAISE, 14);
+                vibrator.cancel();
+                audioCall.startCall();
+                IN_CALL = true;
+                MessagingHelpers.sendMessage("ACC:", ipAddress, ServiceHelpers.BROADCAST_PORT);
+                buttonCallAccept.setVisibility(View.GONE);
+                break;
+            case R.id.button_call_reject:
+                if (ringtone.isPlaying()) {
+                    ringtone.stop();
+                }
+                if (IN_CALL) {
+                    audioCall.endCall();
+                    MessagingHelpers.sendMessage("END:", ipAddress, ServiceHelpers.BROADCAST_PORT);
+                    IN_CALL = false;
+                    mAudioManager.setMode(AudioManager.MODE_NORMAL);
+                } else {
+                    MessagingHelpers.sendMessage("REJ:", ipAddress, ServiceHelpers.BROADCAST_PORT);
+                }
+                finish();
+                break;
+        }
     }
 }

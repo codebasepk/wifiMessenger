@@ -32,15 +32,16 @@ import java.net.InetAddress;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements
-        Switch.OnCheckedChangeListener, ListView.OnItemClickListener {
+        Switch.OnCheckedChangeListener, ListView.OnItemClickListener, View.OnClickListener,
+        EditText.OnFocusChangeListener {
 
-    LinearLayout layoutUsername;
-    RelativeLayout layoutMain;
-    LinearLayout layoutMainTwo;
-    EditText editTextUsername;
-    TextView showUsername;
-    ListView peerList;
-    Switch serviceSwitch;
+    private LinearLayout layoutUsername;
+    private RelativeLayout layoutMain;
+    private LinearLayout layoutMainTwo;
+    private EditText editTextUsername;
+    private TextView showUsername;
+    private ListView peerList;
+    private Switch serviceSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,33 +57,12 @@ public class MainActivity extends AppCompatActivity implements
         peerList.setOnItemClickListener(this);
 
         if (AppGlobals.isVirgin()) {
-            System.out.println("First time");
             layoutMain.setVisibility(View.GONE);
             layoutUsername.setVisibility(View.VISIBLE);
             editTextUsername = (EditText) findViewById(R.id.editTextDisplayName);
+            editTextUsername.setOnFocusChangeListener(this);
             Button startButton = (Button) findViewById(R.id.buttonStart);
-            startButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.i("wifiMessenger", "Start button pressed");
-                    String username = editTextUsername.getText().toString();
-                    if (username.trim().length() < 1) {
-                        Toast.makeText(getApplicationContext(), "Invalid Username", Toast.LENGTH_SHORT).show();
-                    } else {
-                        AppGlobals.putName(username);
-                        notVirgin();
-                    }
-                }
-            });
-
-            editTextUsername.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (!hasFocus) {
-                        hideKeyboard(v);
-                    }
-                }
-            });
+            startButton.setOnClickListener(this);
         } else {
             notVirgin();
         }
@@ -97,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if (!AppGlobals.isVirgin()) {
+        if (!AppGlobals.isVirgin() && AppGlobals.isServiceOn() && !ServiceHelpers.DISCOVER) {
             ServiceHelpers.discover(MainActivity.this, peerList);
         }
     }
@@ -111,11 +91,13 @@ public class MainActivity extends AppCompatActivity implements
                     layoutMainTwo.setVisibility(View.VISIBLE);
                     AppGlobals.setService(true);
                     showUsername.setTextColor(Color.parseColor("#4CAF50"));
+                    ServiceHelpers.discover(MainActivity.this, peerList);
                 } else {
                     stopService(new Intent(getApplicationContext(), LongRunningService.class));
                     layoutMainTwo.setVisibility(View.GONE);
                     AppGlobals.setService(false);
                     showUsername.setTextColor(Color.parseColor("#F44336"));
+                    ServiceHelpers.stopDiscover();
                 }
                 invalidateOptionsMenu();
         }
@@ -125,7 +107,6 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if (!ServiceHelpers.isPeerListEmpty()) {
-            System.out.println(String.format("Item: %d clicked", position));
             HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
             String name = parent.getItemAtPosition(position).toString();
             String ipAddress = peers.get(name).getHostAddress();
@@ -168,8 +149,10 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-
-
+            peerList.setAdapter(null);
+            if (!ServiceHelpers.DISCOVER) {
+                ServiceHelpers.discover(MainActivity.this, peerList);
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -204,5 +187,32 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 })
                 .create().show();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.buttonStart:
+                Log.i("wifiMessenger", "Start button pressed");
+                String username = editTextUsername.getText().toString();
+                if (username.trim().length() < 1) {
+                    Toast.makeText(getApplicationContext(), "Invalid Username", Toast.LENGTH_SHORT).show();
+                } else {
+                    AppGlobals.putName(username);
+                    notVirgin();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+        switch (v.getId()) {
+            case R.id.editTextDisplayName:
+                if (!hasFocus) {
+                    hideKeyboard(v);
+                }
+                break;
+        }
     }
 }
