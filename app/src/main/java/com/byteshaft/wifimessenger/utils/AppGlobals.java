@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 
 public class AppGlobals extends Application {
 
@@ -46,5 +47,10 @@ public class AppGlobals extends Application {
 
     public static void setService(boolean service) {
         sPreferences.edit().putBoolean(SERVICE_KEY, service).apply();
+    }
+
+    public static String getDeviceId() {
+        Context context = getContext();
+        return Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
     }
 }

@@ -1,4 +1,4 @@
-package com.byteshaft.wifimessenger;
+package com.byteshaft.wifimessenger.activities;
 
 import android.app.Activity;
 import android.content.Context;
@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.byteshaft.wifimessenger.R;
 import com.byteshaft.wifimessenger.utils.AudioCall;
 import com.byteshaft.wifimessenger.utils.MessagingHelpers;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
