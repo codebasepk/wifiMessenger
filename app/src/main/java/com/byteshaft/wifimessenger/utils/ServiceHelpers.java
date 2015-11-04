@@ -2,11 +2,15 @@ package com.byteshaft.wifimessenger.utils;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v4.app.NotificationCompat;
@@ -14,8 +18,9 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.byteshaft.wifimessenger.activities.CallActivity;
 import com.byteshaft.wifimessenger.R;
+import com.byteshaft.wifimessenger.activities.CallActivity;
+import com.byteshaft.wifimessenger.activities.ChatActivity;
 import com.byteshaft.wifimessenger.database.MessagesDatabase;
 
 import org.json.JSONException;
@@ -33,7 +38,9 @@ import java.util.HashMap;
 
 public class ServiceHelpers {
 
-    private static final int DISCOVER_PORT = 50003;
+    private static boolean BRUTE_STOP;
+
+    public static final int DISCOVER_PORT = 50003;
     public static boolean DISCOVER;
     private static Thread discoverThread;
     private static DatagramSocket sDataSocket;
@@ -41,7 +48,7 @@ public class ServiceHelpers {
 
     private final static int BROADCAST_INTERVAL = 1000;
     public final static int BROADCAST_PORT = 50001;
-    private static final int BROADCAST_BUF_SIZE = 1024;
+    private static final int BROADCAST_BUF_SIZE = 10240;
     private static boolean BROADCAST;
     private static boolean DISCOVERY;
 
@@ -50,16 +57,17 @@ public class ServiceHelpers {
 
     private static DatagramSocket mSocket;
 
-    private static HashMap<String, InetAddress> peersMap = new HashMap<>();
+    private static HashMap<String, String> peersMap = new HashMap<>();
+    public static ArrayList<HashMap> peersArray = new ArrayList<>();
 
     private static String LOG_TAG = "wifiMessenger";
 
-    public static HashMap<String, InetAddress> getPeersList() {
-        return peersMap;
+    public static ArrayList<HashMap> getPeersList() {
+        return peersArray;
     }
 
     public static boolean isPeerListEmpty() {
-        return peersMap.isEmpty();
+        return peersArray.isEmpty();
     }
 
     public static void broadcastName(final String action, final String name,
@@ -134,7 +142,8 @@ public class ServiceHelpers {
 
     public static void discover(final Activity activity, final ListView peersList) {
         DISCOVER = true;
-        final ArrayList<String> peers = new ArrayList<>();
+        peersArray.clear();
+        peersMap.clear();
         long start = System.currentTimeMillis();
         final long end = start + 10*1000; // 10 seconds * 1000 ms/sec
         discoverThread = new Thread(new Runnable() {
@@ -147,34 +156,48 @@ public class ServiceHelpers {
                     }
                     byte[] buffer = new byte[BROADCAST_BUF_SIZE];
                     while (DISCOVER && System.currentTimeMillis() < end) {
-                        DatagramPacket packet = new DatagramPacket(buffer, BROADCAST_BUF_SIZE);
-                        sDataSocket.setSoTimeout(15000);
+                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+//                        sDataSocket.setSoTimeout(100);
                         sDataSocket.receive(packet);
-                        InetAddress ip = packet.getAddress();
                         String data = new String(buffer, 0, packet.getLength());
+                        String ip = packet.getAddress().getHostAddress();
                         String action = data.substring(0, 4);
                         if (action.equals("ADD:")) {
-                            String name = data.substring(4, data.length());
-                            if (peersMap.get(name) == null && !isSelf(ip)) {
-                                peersMap.put(name, ip);
+                            System.out.println(data);
+                            System.out.println(packet.getAddress().getHostAddress());
+                            String nameData = data.substring(4, data.length());
+                            JSONObject object = new JSONObject(nameData);
+                            String name = (String) object.get("name");
+                            String deviceId = (String) object.get("id");
+                            if (peersMap.get("name") == null && !isSelf(ip)) {
+                                peersMap.put("name", name);
+                                peersMap.put("ip", ip);
+                                peersMap.put("device_id", deviceId);
+                                peersMap.put("user_table", name+"_"+deviceId);
+                                peersArray.add(peersMap);
                             }
                         }
                     }
 
-                    for (String key: peersMap.keySet()) {
-                        peers.add(key);
+                    ArrayList<String> peerNames = new ArrayList<>();
+                    for (HashMap map: peersArray) {
+                        peerNames.add((String) map.get("name"));
                     }
 
                     final ArrayAdapter adapter = new ArrayAdapter(
                             AppGlobals.getContext(),
                             R.layout.list_layout,
                             R.id.tv_peer_list,
-                            peers
+                            peerNames
                     );
 
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            if (BRUTE_STOP) {
+                                BRUTE_STOP = false;
+                                return;
+                            }
                             peersList.setAdapter(null);
                             peersList.setAdapter(adapter);
                             restartDiscovery(5000, activity, peersList);
@@ -185,8 +208,11 @@ public class ServiceHelpers {
                     DISCOVER = false;
                     e.printStackTrace();
                 } catch (IOException e) {
+                    if (BRUTE_STOP) {
+                        BRUTE_STOP = false;
+                        return;
+                    }
                     DISCOVER = false;
-                    System.out.println("Faced IOException");
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -195,6 +221,8 @@ public class ServiceHelpers {
                         }
                     });
                     e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -202,7 +230,12 @@ public class ServiceHelpers {
     }
 
     public static void stopDiscover() {
+        BRUTE_STOP = true;
         DISCOVER = false;
+        if (discoverThread != null) {
+            discoverThread.interrupt();
+            discoverThread = null;
+        }
     }
 
     public static void startListeningForCommands() {
@@ -224,6 +257,7 @@ public class ServiceHelpers {
                         InetAddress ip = packet.getAddress();
                         final String data = new String(buffer, 0, packet.getLength());
                         String action = data.substring(0, 4);
+                        System.out.println(data);
                         switch (action) {
                             case "MSG:":
                                 String message = data.substring(4, data.length());
@@ -235,7 +269,7 @@ public class ServiceHelpers {
                                     String messageTime = (String) object.get("time");
                                     MessagesDatabase database = new MessagesDatabase(AppGlobals.getContext());
                                     database.addNewMessageToThread(
-                                            sender+"_"+deviceId, messageText, "1", messageTime);
+                                            sender + "_" + deviceId, messageText, "1", messageTime);
 
                                     IntentFilter filter = new IntentFilter("sms_notification");
                                     AppGlobals.getContext().registerReceiver(notificationReceiver, filter);
@@ -243,16 +277,28 @@ public class ServiceHelpers {
                                     intent.putExtra("sender", sender);
                                     intent.putExtra("message", messageText);
                                     intent.putExtra("time", messageTime);
+                                    intent.putExtra("unique_id", sender+"_"+deviceId);
+                                    intent.putExtra("ip_address", packet.getAddress().getHostAddress());
                                     AppGlobals.getContext().sendBroadcast(intent);
+
+                                    if (ChatActivity.isRunning()) {
+                                        if (ChatActivity.getInstance().isChatVisibleForContact(sender)) {
+                                            final HashMap<String, String> mapTemp = new HashMap<>();
+                                            mapTemp.put("direction", "1");
+                                            mapTemp.put("body", messageText);
+                                            if (ChatActivity.getInstance().adapter != null) {
+                                                ChatActivity.getInstance().runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        ChatActivity.getInstance().updateAdapter(mapTemp);
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
                                 } catch (JSONException e) {
                                     startListeningForCommands();
                                     e.printStackTrace();
-                                }
-                                break;
-                            case "ADD:":
-                                String name = data.substring(4, data.length());
-                                if (peersMap.get(name) == null && !isSelf(ip)) {
-                                    peersMap.put(name, ip);
                                 }
                                 break;
                             case "CAL:":
@@ -290,6 +336,9 @@ public class ServiceHelpers {
                                 CallActivity.IN_CALL = false;
                                 Log.i("END", "Call Ended");
                                 break;
+                            case "ADD:":
+                                System.out.println("Discovery:" +data);
+                                break;
                         }
                     }
                 } catch (SocketException e) {
@@ -316,14 +365,14 @@ public class ServiceHelpers {
         }, restartTime);
     }
 
-    public static boolean isSelf(InetAddress inetAddress) {
+    public static boolean isSelf(String foundIp) {
         int ipAddress = getSelfIp();
         String realIP = String.format("%d.%d.%d.%d",
                 (ipAddress & 0xff),
                 (ipAddress >> 8 & 0xff),
                 (ipAddress >> 16 & 0xff),
                 (ipAddress >> 24 & 0xff));
-        return realIP.equals(inetAddress.getHostAddress());
+        return realIP.equals(foundIp);
     }
 
     private static int getSelfIp() {
@@ -350,15 +399,35 @@ public class ServiceHelpers {
         public void onReceive(Context context, Intent intent) {
             String sender = intent.getExtras().getString("sender");
             String message = intent.getExtras().getString("message");
-            showNotification(sender, message);
+            String uniqueId = intent.getExtras().getString("unique_id");
+            String ipAddress = intent.getExtras().getString("ip_address");
+            try {
+                Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Ringtone r = RingtoneManager.getRingtone(AppGlobals.getContext(), notification);
+                r.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            showNotification(sender, message, uniqueId, ipAddress);
         }
     };
 
-    private static void showNotification(String title, String content) {
+    private static void showNotification(String title, String content, String uniqueId, String ip) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(AppGlobals.getContext());
         builder.setSmallIcon(R.mipmap.ic_launcher);
         builder.setContentTitle("Message from " + title);
         builder.setContentText(content);
+        builder.setAutoCancel(true);
+
+        Intent resultIntent = new Intent(AppGlobals.getContext(), ChatActivity.class);
+        resultIntent.putExtra("CONTACT_NAME", title);
+        resultIntent.putExtra("IP_ADDRESS", ip);
+        resultIntent.putExtra("user_table", uniqueId);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                AppGlobals.getContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+
         NotificationManager manager = (NotificationManager) AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(998, builder.build());
     }

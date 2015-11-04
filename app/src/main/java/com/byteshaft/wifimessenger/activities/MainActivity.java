@@ -29,7 +29,7 @@ import com.byteshaft.wifimessenger.utils.AppGlobals;
 import com.byteshaft.wifimessenger.utils.MessagingHelpers;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 
-import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements
@@ -44,10 +44,25 @@ public class MainActivity extends AppCompatActivity implements
     private ListView peerList;
     private Switch serviceSwitch;
 
+    private static MainActivity sInstance;
+
+    public static boolean isRunning() {
+        return sInstance != null;
+    }
+
+    public static MainActivity getInstance() {
+        return sInstance;
+    }
+
+    public void switchService(boolean on) {
+        serviceSwitch.setChecked(on);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        sInstance = this;
 //        startActivity(new Intent(this, MessagesListActivity.class));
         layoutUsername = (LinearLayout) findViewById(R.id.layout_username);
         layoutMain = (RelativeLayout) findViewById(R.id.layout_main);
@@ -79,7 +94,9 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if (!AppGlobals.isVirgin() && AppGlobals.isServiceOn() && !ServiceHelpers.DISCOVER) {
+        if (!AppGlobals.isVirgin() && AppGlobals.isServiceOn() && !ServiceHelpers.DISCOVER &&
+                LongRunningService.isRunning()) {
+
             ServiceHelpers.discover(MainActivity.this, peerList);
         }
     }
@@ -109,10 +126,11 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if (!ServiceHelpers.isPeerListEmpty()) {
-            HashMap<String, InetAddress> peers = ServiceHelpers.getPeersList();
+            ArrayList<HashMap> peers = ServiceHelpers.getPeersList();
             String name = parent.getItemAtPosition(position).toString();
-            String ipAddress = peers.get(name).getHostAddress();
-            showActionsDialog(name, ipAddress, peers);
+            String ipAddress = (String) peers.get(position).get("ip");
+            String userTable = (String) peers.get(position).get("user_table");
+            showActionsDialog(name, ipAddress, userTable);
         }
     }
 
@@ -160,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    public void showActionsDialog(final String username, final String ipAddress,  final HashMap<String, InetAddress> peers) {
+    public void showActionsDialog(final String username, final String ipAddress, final String userTable) {
 
         AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
         actionDialog.setTitle("Choose Action")
@@ -171,6 +189,7 @@ public class MainActivity extends AppCompatActivity implements
                         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                         intent.putExtra("CONTACT_NAME", username);
                         intent.putExtra("IP_ADDRESS", ipAddress);
+                        intent.putExtra("user_table", userTable);
                         startActivity(intent);
                     }
                 })

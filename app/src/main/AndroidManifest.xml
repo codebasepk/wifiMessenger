@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name=".utils.AppGlobals"
@@ -35,6 +36,19 @@
         <activity android:name=".activities.MessagesListActivity"
             android:screenOrientation="portrait"/>
         <service android:name=".services.LongRunningService"/>
+
+        <receiver android:name=".receivers.BootStateListener">
+            <intent-filter>
+                <action android:name="ANDROID.INTENT.ACTION.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".receivers.WifiReceiver">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.net.wifi.STATE_CHANGE"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

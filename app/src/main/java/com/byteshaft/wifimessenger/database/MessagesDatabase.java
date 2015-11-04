@@ -44,7 +44,6 @@ public class MessagesDatabase extends SQLiteOpenHelper {
         values.put(DatabaseConstants.LAST_MESSAGE, lastMsg);
         values.put(DatabaseConstants.LAST_MESSAGE_TIME, lastMsgTime);
         db.update(DatabaseConstants.TABLE_NAME, values, "ID=" + id, null);
-        System.out.println("Last message saved");
         cursor.close();
     }
 
@@ -87,6 +86,8 @@ public class MessagesDatabase extends SQLiteOpenHelper {
         } else {
             createNewThreadTableIfNotExists(db, uniqueId, body, time);
         }
+
+        System.out.println("Saving to table: " + uniqueId);
 
         ContentValues values = new ContentValues();
         values.put(DatabaseConstants.BODY, body);
