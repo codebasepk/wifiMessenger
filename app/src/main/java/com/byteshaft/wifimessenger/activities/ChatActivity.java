@@ -99,7 +99,7 @@ public class ChatActivity extends Activity implements View.OnClickListener {
                     String deviceId = AppGlobals.getDeviceId();
                     String currentTime = String.valueOf(System.currentTimeMillis());
                     String realMessage = String.format(
-                            "{\"device_id\": %s,\"sender\": \"%s\", \"text\": \"%s\", \"time\": \"%s\"}",
+                            "{\"device_id\": \"%s\",\"sender\": \"%s\", \"text\": \"%s\", \"time\": \"%s\"}",
                             deviceId, AppGlobals.getName(), message, currentTime);
                     MessagingHelpers.sendMessage("MSG:" + realMessage, ipAddress,
                             ServiceHelpers.BROADCAST_PORT);
