@@ -1,12 +1,14 @@
 package com.byteshaft.wifimessenger.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -27,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ChatActivity extends Activity implements View.OnClickListener {
+public class ChatActivity extends AppCompatActivity implements View.OnClickListener {
 
     private TextView textViewContactName;
     private ImageButton buttonSend;
@@ -63,7 +65,6 @@ public class ChatActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         sInstance = this;
-        textViewContactName = (TextView) findViewById(R.id.tv_contact_name_chat);
         editTextMessage = (EditText) findViewById(R.id.et_chat);
         buttonSend = (ImageButton) findViewById(R.id.button_chat_send);
         buttonSend.setOnClickListener(this);
@@ -74,7 +75,8 @@ public class ChatActivity extends Activity implements View.OnClickListener {
         ipAddress = intent.getStringExtra("IP_ADDRESS");
         MessagesDatabase database = new MessagesDatabase(this);
         mContextUserTable = intent.getStringExtra("user_table");
-        textViewContactName.setText(contactName);
+
+        setTitle(contactName);
 
         try {
             messages = database.getMessagesForContact(mContextUserTable);
@@ -152,4 +154,27 @@ public class ChatActivity extends Activity implements View.OnClickListener {
         public LinearLayout layout;
     }
 
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id  == R.id.action_call) {
+            Intent intent = new Intent(ChatActivity.this, CallActivity.class);
+                        intent.putExtra("CONTACT_NAME", contactName);
+                        intent.putExtra("CALL_STATE", "OUTGOING");
+                        intent.putExtra("IP_ADDRESS", ipAddress);
+                        startActivity(intent);
+                        MessagingHelpers.sendCallRequest(contactName, ipAddress, ServiceHelpers.BROADCAST_PORT);
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_call, menu);
+        return true;
+    }
 }
