@@ -1,8 +1,6 @@
 package com.byteshaft.wifimessenger.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -26,7 +24,6 @@ import android.widget.Toast;
 import com.byteshaft.wifimessenger.R;
 import com.byteshaft.wifimessenger.services.LongRunningService;
 import com.byteshaft.wifimessenger.utils.AppGlobals;
-import com.byteshaft.wifimessenger.utils.MessagingHelpers;
 import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 
 import java.util.ArrayList;
@@ -131,6 +128,8 @@ public class MainActivity extends AppCompatActivity implements
             String ipAddress = (String) peers.get(position).get("ip");
             String userTable = (String) peers.get(position).get("user_table");
             showActionsDialog(name, ipAddress, userTable);
+
+
         }
     }
 
@@ -180,34 +179,40 @@ public class MainActivity extends AppCompatActivity implements
 
     public void showActionsDialog(final String username, final String ipAddress, final String userTable) {
 
-        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
-        actionDialog.setTitle("Choose Action")
-                .setMessage("Selected User: " + username)
-                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                        intent.putExtra("CONTACT_NAME", username);
-                        intent.putExtra("IP_ADDRESS", ipAddress);
-                        intent.putExtra("user_table", userTable);
-                        startActivity(intent);
-                    }
-                })
-
-                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        Intent intent = new Intent(MainActivity.this, CallActivity.class);
-                        intent.putExtra("CONTACT_NAME", username);
-                        intent.putExtra("CALL_STATE", "OUTGOING");
-                        intent.putExtra("IP_ADDRESS", ipAddress);
-                        startActivity(intent);
-
-                        MessagingHelpers.sendCallRequest(username, ipAddress, ServiceHelpers.BROADCAST_PORT);
-                    }
-                })
-                .create().show();
+        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        intent.putExtra("CONTACT_NAME", username);
+        intent.putExtra("IP_ADDRESS", ipAddress);
+        intent.putExtra("user_table", userTable);
+        startActivity(intent);
+//
+//        AlertDialog.Builder actionDialog = new AlertDialog.Builder(this);
+//        actionDialog.setTitle("Choose Action")
+//                .setMessage("Selected User: " + username)
+//                .setPositiveButton("Text", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+////                        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+////                        intent.putExtra("CONTACT_NAME", username);
+////                        intent.putExtra("IP_ADDRESS", ipAddress);
+////                        intent.putExtra("user_table", userTable);
+////                        startActivity(intent);
+//                    }
+//                })
+//
+//                .setNegativeButton("Call", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//
+//                        Intent intent = new Intent(MainActivity.this, CallActivity.class);
+//                        intent.putExtra("CONTACT_NAME", username);
+//                        intent.putExtra("CALL_STATE", "OUTGOING");
+//                        intent.putExtra("IP_ADDRESS", ipAddress);
+//                        startActivity(intent);
+//
+//                        MessagingHelpers.sendCallRequest(username, ipAddress, ServiceHelpers.BROADCAST_PORT);
+//                    }
+//                })
+//                .create().show();
     }
 
     @Override

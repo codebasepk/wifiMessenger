@@ -7,16 +7,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <TextView
-            android:id="@+id/tv_contact_name_chat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_gravity="center_horizontal"
-            android:typeface="serif"
-            android:textSize="26dp"
-            android:textStyle="bold"
-            android:textColor="#3F51B5"/>
         <ListView
             android:id="@+id/lv_chat"
             android:layout_width="fill_parent"
