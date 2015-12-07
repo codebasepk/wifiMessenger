@@ -4,6 +4,9 @@
     <item
         android:id="@+id/action_refresh"
         android:title="Refresh ListView"
-        android:icon="@mipmap/ic_menu_refresh"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/enable_service"
+        android:title="Enable Service"
+        app:showAsAction="never" />
 </menu>

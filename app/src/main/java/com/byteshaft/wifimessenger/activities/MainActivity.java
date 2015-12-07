@@ -39,7 +39,8 @@ public class MainActivity extends AppCompatActivity implements
     private EditText editTextUsername;
     private TextView showUsername;
     private ListView peerList;
-    private Switch serviceSwitch;
+    public MenuItem menuItemService;
+    public MenuItem menuItemRefresh;
 
     private static MainActivity sInstance;
 
@@ -49,10 +50,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public static MainActivity getInstance() {
         return sInstance;
-    }
-
-    public void switchService(boolean on) {
-        serviceSwitch.setChecked(on);
     }
 
     @Override
@@ -65,8 +62,8 @@ public class MainActivity extends AppCompatActivity implements
         layoutMain = (RelativeLayout) findViewById(R.id.layout_main);
         layoutMainTwo = (LinearLayout) findViewById(R.id.layout_main_two);
         showUsername = (TextView) findViewById(R.id.tv_username);
-        serviceSwitch = (Switch) findViewById(R.id.switch_service);
-        serviceSwitch.setOnCheckedChangeListener(this);
+//        serviceSwitch = (Switch) findViewById(R.id.switch_service);
+//        serviceSwitch.setOnCheckedChangeListener(this);
         peerList = (ListView) findViewById(R.id.lv_peer_list);
         peerList.setOnItemClickListener(this);
 
@@ -128,8 +125,6 @@ public class MainActivity extends AppCompatActivity implements
             String ipAddress = (String) peers.get(position).get("ip");
             String userTable = (String) peers.get(position).get("user_table");
             showActionsDialog(name, ipAddress, userTable);
-
-
         }
     }
 
@@ -138,7 +133,6 @@ public class MainActivity extends AppCompatActivity implements
         layoutUsername.setVisibility(View.GONE);
         AppGlobals.setVirgin(false);
         showUsername.setText("Username: " + AppGlobals.getName());
-        serviceSwitch.setChecked(AppGlobals.isServiceOn());
         if (AppGlobals.isServiceOn()) {
             layoutMainTwo.setVisibility(View.VISIBLE);
             showUsername.setTextColor(Color.parseColor("#4CAF50"));
@@ -156,10 +150,14 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        menuItemRefresh = menu.findItem(R.id.action_refresh);
+        menuItemService = menu.findItem(R.id.enable_service);
         if (AppGlobals.isServiceOn()) {
-            menu.findItem(R.id.action_refresh).setVisible(true);
+            menu.findItem(R.id.action_refresh).setTitle("Refresh");
+            menu.findItem(R.id.enable_service).setTitle("Disable Service");
         } else {
             menu.findItem(R.id.action_refresh).setVisible(false);
+            menu.findItem(R.id.enable_service).setTitle("Enable Service");
         }
         return true;
     }
@@ -173,6 +171,29 @@ public class MainActivity extends AppCompatActivity implements
                 ServiceHelpers.discover(MainActivity.this, peerList);
             }
             return true;
+        } if (id == R.id.enable_service) {
+            if (!AppGlobals.isServiceOn()) {
+                System.out.println("ok");
+                startService(new Intent(getApplicationContext(), LongRunningService.class));
+                layoutMainTwo.setVisibility(View.VISIBLE);
+                AppGlobals.setService(true);
+                item.setTitle("Disable Service");
+                menuItemRefresh.setVisible(true);
+                showUsername.setTextColor(Color.parseColor("#4CAF50"));
+                ServiceHelpers.discover(MainActivity.this, peerList);
+                return true;
+            } else {
+                System.out.println("that");
+                stopService(new Intent(getApplicationContext(), LongRunningService.class));
+                layoutMainTwo.setVisibility(View.GONE);
+                AppGlobals.setService(false);
+                menuItemRefresh.setVisible(false);
+                item.setTitle("Enable Service");
+                showUsername.setTextColor(Color.parseColor("#F44336"));
+                ServiceHelpers.stopDiscover();
+            }
+            return true;
+
         }
         return super.onOptionsItemSelected(item);
     }

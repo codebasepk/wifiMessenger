@@ -47,14 +47,14 @@
             android:layout_height="wrap_content"
             android:textSize="12dp"
             android:typeface="sans"/>
-        <Switch
-            android:id="@+id/switch_service"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Enable Service"
-            android:textSize="20dp"
-            android:textStyle="bold"
-            android:paddingTop="13dp"/>
+        <!--<Switch-->
+            <!--android:id="@+id/switch_service"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="Enable Service"-->
+            <!--android:textSize="20dp"-->
+            <!--android:textStyle="bold"-->
+            <!--android:paddingTop="13dp"/>-->
         <LinearLayout
             android:id="@+id/layout_main_two"
             android:layout_width="match_parent"
