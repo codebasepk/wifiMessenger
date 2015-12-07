@@ -23,7 +23,8 @@ public class WifiReceiver extends BroadcastReceiver {
                 if (AppGlobals.isServiceOn()) {
                     context.startService(new Intent(context, LongRunningService.class));
                     if (MainActivity.isRunning()) {
-                        MainActivity.getInstance().switchService(true);
+                        MainActivity.getInstance().menuItemService.setTitle("Disable Service");
+                        MainActivity.getInstance().menuItemRefresh.setVisible(true);
                     }
                 }
             }
@@ -31,7 +32,9 @@ public class WifiReceiver extends BroadcastReceiver {
             context.stopService(new Intent(context, LongRunningService.class));
             boolean wasEnabled = AppGlobals.isServiceOn();
             if (MainActivity.isRunning()) {
-                MainActivity.getInstance().switchService(false);
+//                MainActivity.getInstance().switchService(false);
+                MainActivity.getInstance().menuItemService.setTitle("Enable Service");
+                MainActivity.getInstance().menuItemRefresh.setVisible(false);
                 // Hack to reenable service so that the app works after wifi is on.
                 AppGlobals.setService(wasEnabled);
             }
