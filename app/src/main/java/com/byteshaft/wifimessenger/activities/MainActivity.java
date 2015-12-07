@@ -12,12 +12,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,8 +27,7 @@ import com.byteshaft.wifimessenger.utils.ServiceHelpers;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity implements
-        Switch.OnCheckedChangeListener, ListView.OnItemClickListener, View.OnClickListener,
+public class MainActivity extends AppCompatActivity implements ListView.OnItemClickListener, View.OnClickListener,
         EditText.OnFocusChangeListener {
 
     private LinearLayout layoutUsername;
@@ -66,7 +63,8 @@ public class MainActivity extends AppCompatActivity implements
 //        serviceSwitch.setOnCheckedChangeListener(this);
         peerList = (ListView) findViewById(R.id.lv_peer_list);
         peerList.setOnItemClickListener(this);
-
+        System.out.println(AppGlobals.isVirgin());
+        System.out.println(AppGlobals.isServiceOn());
         if (AppGlobals.isVirgin()) {
             layoutMain.setVisibility(View.GONE);
             layoutUsername.setVisibility(View.VISIBLE);
@@ -90,35 +88,33 @@ public class MainActivity extends AppCompatActivity implements
         super.onResume();
         if (!AppGlobals.isVirgin() && AppGlobals.isServiceOn() && !ServiceHelpers.DISCOVER &&
                 LongRunningService.isRunning()) {
-
             ServiceHelpers.discover(MainActivity.this, peerList);
         }
     }
 
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        switch (buttonView.getId()) {
-            case R.id.switch_service:
-                if (isChecked) {
-                    startService(new Intent(getApplicationContext(), LongRunningService.class));
-                    layoutMainTwo.setVisibility(View.VISIBLE);
-                    AppGlobals.setService(true);
-                    showUsername.setTextColor(Color.parseColor("#4CAF50"));
-                    ServiceHelpers.discover(MainActivity.this, peerList);
-                } else {
-                    stopService(new Intent(getApplicationContext(), LongRunningService.class));
-                    layoutMainTwo.setVisibility(View.GONE);
-                    AppGlobals.setService(false);
-                    showUsername.setTextColor(Color.parseColor("#F44336"));
-                    ServiceHelpers.stopDiscover();
-                }
-                invalidateOptionsMenu();
-        }
-    }
+//    @Override
+//    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//        switch (buttonView.getId()) {
+//            case R.id.switch_service:
+//                if (isChecked) {
+//                    startService(new Intent(getApplicationContext(), LongRunningService.class));
+//                    layoutMainTwo.setVisibility(View.VISIBLE);
+//                    AppGlobals.setService(true);
+//                    showUsername.setTextColor(Color.parseColor("#4CAF50"));
+//                    ServiceHelpers.discover(MainActivity.this, peerList);
+//                } else {
+//                    stopService(new Intent(getApplicationContext(), LongRunningService.class));
+//                    layoutMainTwo.setVisibility(View.GONE);
+//                    AppGlobals.setService(false);
+//                    showUsername.setTextColor(Color.parseColor("#F44336"));
+//                    ServiceHelpers.stopDiscover();
+//                }
+//                invalidateOptionsMenu();
+//        }
+//    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
         if (!ServiceHelpers.isPeerListEmpty()) {
             ArrayList<HashMap> peers = ServiceHelpers.getPeersList();
             String name = parent.getItemAtPosition(position).toString();
@@ -136,6 +132,11 @@ public class MainActivity extends AppCompatActivity implements
         if (AppGlobals.isServiceOn()) {
             layoutMainTwo.setVisibility(View.VISIBLE);
             showUsername.setTextColor(Color.parseColor("#4CAF50"));
+            startService(new Intent(getApplicationContext(), LongRunningService.class));
+            layoutMainTwo.setVisibility(View.VISIBLE);
+            AppGlobals.setService(true);
+            showUsername.setTextColor(Color.parseColor("#4CAF50"));
+            ServiceHelpers.discover(MainActivity.this, peerList);
         } else {
             layoutMainTwo.setVisibility(View.GONE);
             showUsername.setTextColor(Color.parseColor("#F44336"));
@@ -193,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements
                 ServiceHelpers.stopDiscover();
             }
             return true;
-
         }
         return super.onOptionsItemSelected(item);
     }

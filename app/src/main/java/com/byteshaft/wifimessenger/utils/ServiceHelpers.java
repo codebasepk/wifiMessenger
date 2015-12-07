@@ -1,8 +1,6 @@
 package com.byteshaft.wifimessenger.utils;
 
 import android.app.Activity;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +11,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -413,22 +410,26 @@ public class ServiceHelpers {
     };
 
     private static void showNotification(String title, String content, String uniqueId, String ip) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(AppGlobals.getContext());
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setContentTitle("Message from " + title);
-        builder.setContentText(content);
-        builder.setAutoCancel(true);
-
-        Intent resultIntent = new Intent(AppGlobals.getContext(), ChatActivity.class);
-        resultIntent.putExtra("CONTACT_NAME", title);
-        resultIntent.putExtra("IP_ADDRESS", ip);
-        resultIntent.putExtra("user_table", uniqueId);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                AppGlobals.getContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(pendingIntent);
-
-
-        NotificationManager manager = (NotificationManager) AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(998, builder.build());
+//        NotificationCompat.Builder builder = new NotificationCompat.Builder(AppGlobals.getContext());
+//        builder.setSmallIcon(R.mipmap.ic_launcher);
+//        builder.setContentTitle("Message from " + title);
+//        builder.setContentText(content);
+//        builder.setAutoCancel(true);
+        System.out.println(AppGlobals.chatActivityOpen);
+        if (!AppGlobals.chatActivityOpen) {
+            Intent resultIntent = new Intent(AppGlobals.getContext(), ChatActivity.class);
+            resultIntent.putExtra("CONTACT_NAME", title);
+            resultIntent.putExtra("IP_ADDRESS", ip);
+            resultIntent.putExtra("user_table", uniqueId);
+            resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            AppGlobals.getContext().startActivity(resultIntent);
+        }
+//        PendingIntent pendingIntent = PendingIntent.getActivity(
+//                AppGlobals.getContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//        builder.setContentIntent(pendingIntent);
+//
+//
+//        NotificationManager manager = (NotificationManager) AppGlobals.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+//        manager.notify(998, builder.build());
     }
 }

@@ -13,6 +13,7 @@ public class AppGlobals extends Application {
     private static final String VIRGIN_KEY = "virgin";
     private static final String USER_NAME = "user_name";
     private static final String SERVICE_KEY = "service_switch";
+    public static boolean chatActivityOpen = false;
 
     @Override
     public void onCreate() {

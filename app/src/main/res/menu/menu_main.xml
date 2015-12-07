@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
     <item
         android:id="@+id/action_refresh"
-        android:title="Refresh ListView"
+        android:title="Refresh"
         app:showAsAction="never" />
     <item
         android:id="@+id/enable_service"
