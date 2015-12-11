@@ -64,20 +64,18 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        AppGlobals.chatActivityOpen = true;
         sInstance = this;
         editTextMessage = (EditText) findViewById(R.id.et_chat);
         buttonSend = (ImageButton) findViewById(R.id.button_chat_send);
         buttonSend.setOnClickListener(this);
         ListView bubbleList = (ListView) findViewById(R.id.lv_chat);
-
         Intent intent = getIntent();
         contactName = intent.getStringExtra("CONTACT_NAME");
         ipAddress = intent.getStringExtra("IP_ADDRESS");
         MessagesDatabase database = new MessagesDatabase(this);
         mContextUserTable = intent.getStringExtra("user_table");
-
         setTitle(contactName);
-
         try {
             messages = database.getMessagesForContact(mContextUserTable);
         } catch (SQLiteException e) {
@@ -88,6 +86,19 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         adapter = new ChatArrayAdapter(
                 this, R.layout.activity_chat_singlemessage, messages);
         bubbleList.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        AppGlobals.chatActivityOpen = false;
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        AppGlobals.chatActivityOpen = false;
     }
 
     @Override
